@@ -37,28 +37,27 @@ function Dashboard() {
 
   useEffect(() => {
     if (selectedDevice) {
+      const loadHistory = async () => {
+        const data = await loadMeasurementHistory(selectedDevice, { limit: 30 });
+        if (data) {
+          setHistory(data.data.reverse());
+          if (data.data.length > 0) {
+            const levels = data.data.map(m => m.water_level);
+            setStats({
+              current: currentMeasurement?.water_level || 0,
+              max: Math.max(...levels),
+              min: Math.min(...levels),
+              average: (levels.reduce((a, b) => a + b, 0) / levels.length).toFixed(2),
+              distance: currentMeasurement?.distance || 0,
+              temperature: currentMeasurement?.temperature || 0,
+              battery: currentMeasurement?.battery || 0,
+            });
+          }
+        }
+      };
       loadHistory();
     }
-  }, [selectedDevice, loadMeasurementHistory]);
-
-  const loadHistory = async () => {
-    const data = await loadMeasurementHistory(selectedDevice, { limit: 30 });
-    if (data) {
-      setHistory(data.data.reverse());
-      if (data.data.length > 0) {
-        const levels = data.data.map(m => m.water_level);
-        setStats({
-          current: currentMeasurement?.water_level || 0,
-          max: Math.max(...levels),
-          min: Math.min(...levels),
-          average: (levels.reduce((a, b) => a + b, 0) / levels.length).toFixed(2),
-          distance: currentMeasurement?.distance || 0,
-          temperature: currentMeasurement?.temperature || 0,
-          battery: currentMeasurement?.battery || 0,
-        });
-      }
-    }
-  };
+  }, [selectedDevice, loadMeasurementHistory, currentMeasurement]);
 
   const getStateColor = (state) => {
     switch (state) {
