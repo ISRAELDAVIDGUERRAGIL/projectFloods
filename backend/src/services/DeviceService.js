@@ -163,7 +163,7 @@ class DeviceService {
    */
   static async generateApiKey(deviceId) {
     try {
-      const apiKey = \`sk_live_\${crypto.randomBytes(32).toString('hex')}\`;
+      const apiKey = `sk_live_${crypto.randomBytes(32).toString('hex')}`;
 
       // En producción, guardar en BD
       // Por ahora retornar
