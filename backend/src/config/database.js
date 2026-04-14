@@ -1,49 +1,62 @@
-// Base de Datos - Conexión MySQL
+// Base de Datos - Conexión PostgreSQL (Supabase)
 // src/config/database.js
 
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const logger = require('./logger');
 
 let pool;
 
-if (process.env.MYSQL_URL) {
-  // Conexión principal usando URL (ideal para Railway)
-  pool = mysql.createPool(process.env.MYSQL_URL);
+if (process.env.DATABASE_URL || process.env.SUPABASE_URL || process.env.MYSQL_URL) {
+  // Conexión a Supabase Cloud
+  const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_URL || process.env.MYSQL_URL;
+  pool = new Pool({
+    connectionString: connectionString,
+    ssl: { rejectUnauthorized: false } // Requerido por Supabase y muchas nubes
+  });
 } else {
-  // Conexión fallback usando variables desagregadas
-  pool = mysql.createPool({
+  pool = new Pool({
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_NAME || 'iot_inundaciones',
-    port: process.env.DB_PORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    port: process.env.DB_PORT || 5432,
   });
 }
 
-pool.getConnection()
-  .then(conn => {
-    logger.info('MySQL Pool connected successfully.');
-    conn.release();
-  })
-  .catch(err => {
-    logger.error('Error connecting to MySQL:', err);
-  });
+pool.on('connect', () => {
+  logger.info('Supabase PostgreSQL Pool connected successfully.');
+});
 
+pool.on('error', (err) => {
+  logger.error('Unexpected error on idle client', err);
+});
+
+// Función de compatibilidad para evitar reescribir todos los servicios desde cero
 async function query(text, params) {
   const start = Date.now();
+  
+  // Transformar placeholders '?' (MySQL) a '$1, $2' (Postgres) al vuelo
+  let pgText = text;
+  if (pgText && pgText.includes('?')) {
+    let paramIndex = 1;
+    pgText = pgText.replace(/\?/g, () => `$${paramIndex++}`);
+  }
+
+  // Auto-inyección de RETURNING id para los INSERTS si no lo tienen
+  if (pgText.toUpperCase().trim().startsWith('INSERT') && !pgText.toUpperCase().includes('RETURNING')) {
+    pgText = pgText + ' RETURNING id';
+  }
+
   try {
-    const [rows] = await pool.execute(text, params);
+    const res = await pool.query(pgText, params);
     const duration = Date.now() - start;
     logger.debug(`Executed query in ${duration}ms`);
     
-    const isArray = Array.isArray(rows);
+    // Simular el insertId de MySQL usando el id que nos devuelve Postgres con RETURNING
     return {
-      rows: isArray ? rows : [],
-      insertId: !isArray ? rows.insertId : null,
-      affectedRows: !isArray ? rows.affectedRows : null
+      rows: res.rows,
+      insertId: res.rows.length > 0 ? res.rows[0].id : null,
+      affectedRows: res.rowCount
     };
   } catch (err) {
     logger.error('Database query error:', err);
@@ -52,16 +65,23 @@ async function query(text, params) {
 }
 
 async function getClient() {
-  const client = await pool.getConnection();
-  const originalExecute = client.execute.bind(client);
+  const client = await pool.connect();
+  const originalQuery = client.query.bind(client);
   
   client.query = async (text, params) => {
-    const [rows] = await originalExecute(text, params);
-    const isArray = Array.isArray(rows);
+    let pgText = text;
+    if (pgText && pgText.includes('?')) {
+      let paramIndex = 1;
+      pgText = pgText.replace(/\?/g, () => `$${paramIndex++}`);
+    }
+    if (pgText.toUpperCase().trim().startsWith('INSERT') && !pgText.toUpperCase().includes('RETURNING')) {
+      pgText = pgText + ' RETURNING id';
+    }
+    const res = await originalQuery(pgText, params);
     return {
-      rows: isArray ? rows : [],
-      insertId: !isArray ? rows.insertId : null,
-      affectedRows: !isArray ? rows.affectedRows : null
+      rows: res.rows,
+      insertId: res.rows.length > 0 ? res.rows[0].id : null,
+      affectedRows: res.rowCount
     };
   };
   
