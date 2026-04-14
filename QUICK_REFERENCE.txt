@@ -1,0 +1,208 @@
+# ⚡ QUICK REFERENCE - Comandos Rápidos
+
+**Guía rápida para ejecutar el sistema.**
+
+---
+
+## OPCIÓN 1: INSTALACIÓN AUTOMÁTICA (Recomendado - 3 min)
+
+### Windows
+```
+1. Busca la carpeta PROYECTO JORGE
+2. Click derecho en setup.bat
+3. "Ejecutar como administrador"
+4. Espera a que termine
+```
+
+### Linux/Mac
+```bash
+cd PROYECTO\ JORGE
+chmod +x setup.sh
+./setup.sh
+```
+
+---
+
+## OPCIÓN 2: INSTALACIÓN MANUAL (5 min)
+
+### Windows CMD
+```cmd
+cd backend
+npm install
+cd ..
+cd frontend
+npm install
+```
+
+### Linux/Mac Terminal
+```bash
+cd backend && npm install && cd ..
+cd frontend && npm install && cd ..
+```
+
+---
+
+## CREAR BASE DE DATOS (Primero esto)
+
+### Si tienes PostgreSQL instalado
+```bash
+psql -U postgres
+CREATE DATABASE iot_inundaciones;
+\q
+
+psql -U postgres -d iot_inundaciones -f database/init.sql
+```
+
+### Si tienes MySQL instalado
+```bash
+mysql -u root -p < database/init.sql
+```
+
+---
+
+## EJECUTAR SISTEMA (Después de instalar BD)
+
+### Terminal 1: Backend
+```bash
+cd backend
+npm run dev
+```
+
+Verás:
+```
+✓ Servidor corriendo en: http://localhost:3000
+📚 API Base: http://localhost:3000/api
+```
+
+### Terminal 2: Frontend
+```bash
+cd frontend
+npm start
+```
+
+Se abrirá automáticamente http://localhost:3000
+
+---
+
+## ACCEDER
+
+```
+URL:       http://localhost:3000
+Email:     admin@iot-inundaciones.local
+Password:  admin123
+```
+
+---
+
+## CREDENCIALES
+
+| Campo | Valor |
+|-------|-------|
+| Email | admin@iot-inundaciones.local |
+| Password | admin123 |
+| Rol | ADMIN |
+
+---
+
+## ARCHIVOS A LEER
+
+1. `COMO_COMENZAR.md` - Start aquí (2 min)
+2. `README_FULL.md` - Documentación completa
+3. `docs/API.md` - API reference
+
+---
+
+## TROUBLESHOOTING RÁPIDO
+
+| Problema | Solución |
+|----------|----------|
+| `setup no funciona` | Click derecho → Ejecutar como admin |
+| `npm no reconocido` | Instalar Node.js desde nodejs.org |
+| `Puerto 3000 ocupado` | Cambiar: PORT=3001 npm run dev |
+| `BD no conecta` | Verificar MySQL/PostgreSQL corriendo |
+| `Node modules error` | Borrar carpeta, reintentar npm install |
+
+---
+
+## ESTRUCTURA RÁPIDA
+
+```
+PROYECTO JORGE/
+├── backend/          ← Node.js API
+├── frontend/         ← React Dashboard
+├── firmware/         ← ESP32 Code
+├── database/         ← SQL Script
+├── docs/             ← Documentación
+├── setup.bat/sh      ← Instalador
+└── README.md         ← Documentación
+```
+
+---
+
+## CARPETAS IMPORTANTES
+
+```
+backend/src/
+├── routes/           ← Endpoints API
+├── services/         ← Lógica negocio
+├── middleware/       ← Auth, validation
+└── config/           ← DB, logger
+
+frontend/src/
+├── pages/            ← Login, Dashboard
+├── store/            ← State management
+├── services/         ← API client
+└── components/       ← UI components
+```
+
+---
+
+## PUERTOS
+
+```
+Frontend: http://localhost:3000
+Backend:  http://localhost:3000/api
+DB:       Default (PostgreSQL 5432 / MySQL 3306)
+```
+
+---
+
+## ARQUIVOS CRÍTICOS
+
+```
+backend/.env              ← Configuración (ya listo)
+database/init.sql         ← Script BD (ejecutar PRIMERO)
+setup.bat / setup.sh      ← Instalador
+```
+
+---
+
+## VERIFICAR INSTALACIÓN
+
+```bash
+# Node.js instalado?
+node --version
+
+# npm instalado?
+npm --version
+
+# PostgreSQL/MySQL corriendo?
+# - Windows: Services
+# - Linux: systemctl status postgresql
+```
+
+---
+
+## PRÓXIMO PASO DESPUÉS DE EJECUTAR
+
+1. ✅ Sistema funcionando en http://localhost:3000
+2. 📖 Lee `README_FULL.md` para documentación completa
+3. 🔌 Conecta tu ESP32 real (ver `firmware/README.md`)
+4. 👤 Crea más usuarios desde panel admin
+5. 📊 Prueba endpoints API desde `docs/API.md`
+
+---
+
+**¡Listo para usar! 🚀**
+
+*13 de Abril de 2026 - Sistema IoT v1.0.0*

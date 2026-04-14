@@ -1,0 +1,17 @@
+/* Navbar Styles Premium */
+/* src/components/Navbar.css */
+
+.navbar {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .navbar-brand h2 {
+    font-size: 1.25rem;
+  }
+
+  .logout-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
