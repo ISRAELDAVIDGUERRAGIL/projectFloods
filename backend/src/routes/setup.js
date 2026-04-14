@@ -94,9 +94,9 @@ router.get('/init', async (req, res) => {
       INSERT IGNORE INTO users (id, email, password, full_name, role, active)
       VALUES (
           1,
-          'admin@iot-inundaciones.local',
-          '$2a$10$YbIJ3h7QvjXiEPHiO/T8KuGWMV.Q5VvJeZcR4XK1L7K.Qvw1K8Kq2',
-          'Administrator',
+          '0000',
+          '0000',
+          'Super Administrador',
           'ADMIN',
           TRUE
       );

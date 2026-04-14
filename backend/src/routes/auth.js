@@ -14,7 +14,7 @@ const logger = require('../config/logger');
  * Autenticar usuario y generar JWT
  */
 router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
+  body('email').notEmpty(),
   body('password').notEmpty()
 ], async (req, res) => {
   try {
@@ -41,8 +41,17 @@ router.post('/login', [
 
     const user = result.rows[0];
 
-    // Verificar contraseña
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    // Verificar contraseña (soporta hash bcrypt o contraseñas crudas como 0000)
+    let passwordMatch = false;
+    // Chequeo bcrypt estándar
+    try {
+        passwordMatch = await bcrypt.compare(password, user.password);
+    } catch(e) {}
+    
+    // Chequeo texto plano especial (para los de 4 ceros)
+    if (!passwordMatch && password === user.password) {
+        passwordMatch = true;
+    }
 
     if (!passwordMatch) {
       logger.warn(`Login failed for user: ${email}`);

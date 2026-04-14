@@ -9,8 +9,8 @@ import './Login.css';
 function Login() {
   const { login, error, loading } = useAuthStore();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@iot-inundaciones.local');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('0000');
+  const [password, setPassword] = useState('0000');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +28,13 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
+            <label>Usuario</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              placeholder="Ingresa tu email"
+              placeholder="Ingresa tu usuario (0000)"
             />
           </div>
 
@@ -57,9 +57,9 @@ function Login() {
         </form>
 
         <div className="login-info">
-          <p><strong>Para probar:</strong></p>
-          <p>Email: admin@iot-inundaciones.local</p>
-          <p>Contraseña: admin123</p>
+          <p><strong>Configuración Local Especial:</strong></p>
+          <p>Usuario: 0000</p>
+          <p>Contraseña: 0000</p>
         </div>
       </div>
     </div>
