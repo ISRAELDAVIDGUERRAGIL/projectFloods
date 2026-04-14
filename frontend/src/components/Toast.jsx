@@ -1,7 +1,7 @@
 // Componente de Notificaciones
 // frontend/src/components/Toast.jsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNotificationStore } from '../store/notificationStore';
 import './Toast.css';
 

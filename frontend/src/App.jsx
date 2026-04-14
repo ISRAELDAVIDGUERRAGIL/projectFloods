@@ -1,7 +1,7 @@
 // App principal
 // src/App.jsx
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Login from './pages/Login';
@@ -12,7 +12,7 @@ import SimulatorPanel from './components/SimulatorPanel';
 import './App.css';
 
 function App() {
-  const { token, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <Router>

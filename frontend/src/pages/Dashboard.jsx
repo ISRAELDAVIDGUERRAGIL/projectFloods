@@ -1,16 +1,16 @@
 // Componente Dashboard - MEJORADO
 // src/pages/Dashboard.jsx
 
-import React, { useEffect, useState, useRef } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDeviceStore } from '../store/deviceStore';
 import { useAuthStore } from '../store/authStore';
-import { BiWater, BiAlarm, BiCheckCircle, BiWindy, BiDroplet } from 'react-icons/bi';
+import { BiWater } from 'react-icons/bi';
 import './Dashboard.css';
 
 function Dashboard() {
   const { devices, selectedDevice, currentMeasurement, alerts, loadDevices, selectDevice, loadMeasurementHistory } = useDeviceStore();
-  const { user } = useAuthStore();
+  useAuthStore();
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -27,19 +27,19 @@ function Dashboard() {
       if (selectedDevice) loadMeasurementHistory(selectedDevice, { limit: 20 });
     }, 30000); // Actualizar cada 30 segundos
     return () => clearInterval(refreshInterval);
-  }, []);
+  }, [loadDevices, selectedDevice, loadMeasurementHistory]);
 
   useEffect(() => {
     if (devices.length > 0 && !selectedDevice) {
       selectDevice(devices[0].device_id);
     }
-  }, [devices]);
+  }, [devices, selectedDevice, selectDevice]);
 
   useEffect(() => {
     if (selectedDevice) {
       loadHistory();
     }
-  }, [selectedDevice]);
+  }, [selectedDevice, loadMeasurementHistory]);
 
   const loadHistory = async () => {
     const data = await loadMeasurementHistory(selectedDevice, { limit: 30 });
