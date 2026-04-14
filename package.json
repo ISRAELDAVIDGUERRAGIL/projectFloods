@@ -1,0 +1,21 @@
+{
+  "name": "projectfloods",
+  "version": "1.0.0",
+  "description": "Sistema de monitoreo de inundaciones con ESP32",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "npm run dev",
+    "start:prod": "cd backend && npm install && npm start",
+    "dev": "cd backend && npm run dev",
+    "build": "bash build.sh",
+    "frontend:dev": "cd frontend && npm run start",
+    "frontend:build": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "floods",
+    "iot",
+    "esp32"
+  ],
+  "author": "ISRAELDAVIDGUERRAGIL",
+  "license": "MIT"
+}
