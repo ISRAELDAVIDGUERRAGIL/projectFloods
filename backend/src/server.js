@@ -59,6 +59,7 @@ app.use('/api/config', require('./routes/config'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/simulator', require('./routes/simulator'));
+app.use('/api/setup-db', require('./routes/setup'));
 
 // ===== 404 HANDLER =====
 
@@ -94,7 +95,7 @@ app.use((err, req, res, next) => {
 // ===== INICIAR SERVIDOR =====
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || 'localhost';
+const HOST = process.env.HOST || '0.0.0.0';
 
 const server = app.listen(PORT, HOST, () => {
   logger.info('╔════════════════════════════════════════════════════════════╗');
