@@ -110,10 +110,9 @@ router.get('/init', async (req, res) => {
       ('ALARM_DURATION', '30', 'Duracion de alarma (s)', 'integer');
     `;
 
-    // Procesar queries uno por uno porque MySQL2 a veces rechaza multipleStatements vía URI proxy
-    const statements = rawSql.split(';').filter(stmt => stmt.trim() !== '');
+    const statements = rawSql.split(';').filter(stmt => stmt.trim() !== '' && !stmt.toLowerCase().includes('create database') && !stmt.toLowerCase().includes('use railway'));
     for (let stmt of statements) {
-      await db.pool.execute(stmt);
+      await db.pool.query(stmt);
     }
 
     res.json({
