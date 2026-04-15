@@ -325,7 +325,7 @@ npm run build
 
 ## 📝 Notas Importantes
 
-1. **Base de datos**: Instalar PostgreSQL o MySQL antes de correr
+1. **Base de datos**: Instalar MySQL antes de correr
 2. **Puertos**: Backend 3000, Frontend 3000 (luego 3001)
 3. **CORS**: Configurado para localhost, cambiar en producción
 4. **JWT**: Cambiar SECRET en producción

@@ -1,62 +1,73 @@
-// Base de Datos - Conexión PostgreSQL (Supabase)
+// Base de Datos - Conexión MySQL Nativa
 // src/config/database.js
 
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 const logger = require('./logger');
 
 let pool;
 
-if (process.env.DATABASE_URL || process.env.SUPABASE_URL || process.env.MYSQL_URL) {
-  // Conexión a Supabase Cloud
-  const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_URL || process.env.MYSQL_URL;
-  pool = new Pool({
-    connectionString: connectionString,
-    ssl: { rejectUnauthorized: false } // Requerido por Supabase y muchas nubes
+if (process.env.MYSQL_URL || process.env.DATABASE_URL) {
+  const connectionString = process.env.MYSQL_URL || process.env.DATABASE_URL;
+  pool = mysql.createPool({
+    uri: connectionString,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: true
   });
 } else {
-  pool = new Pool({
+  pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'iot_inundaciones',
-    port: process.env.DB_PORT || 5432,
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: true
   });
 }
 
-pool.on('connect', () => {
-  logger.info('Supabase PostgreSQL Pool connected successfully.');
-});
+// Probar conexión inicial
+pool.getConnection()
+  .then(connection => {
+    logger.info('MySQL Pool connected successfully.');
+    connection.release();
+  })
+  .catch(err => {
+    logger.error('Error connecting to MySQL', err);
+  });
 
-pool.on('error', (err) => {
-  logger.error('Unexpected error on idle client', err);
-});
-
-// Función de compatibilidad para evitar reescribir todos los servicios desde cero
+// Función de compatibilidad para evitar reescribir todos los servicios desde cero.
+// Como el proyecto originalmente fue diseñado para PostgreSQL/engañado, algunos servicios pueden esperar la prop 'rows'.
+// También mysql2 usa placeholders '?' por defecto, así que no necesitamos hacer transformaciones complejas.
 async function query(text, params) {
   const start = Date.now();
-  
-  // Transformar placeholders '?' (MySQL) a '$1, $2' (Postgres) al vuelo
-  let pgText = text;
-  if (pgText && pgText.includes('?')) {
-    let paramIndex = 1;
-    pgText = pgText.replace(/\?/g, () => `$${paramIndex++}`);
-  }
-
-  // Auto-inyección de RETURNING id para los INSERTS si no lo tienen
-  if (pgText.toUpperCase().trim().startsWith('INSERT') && !pgText.toUpperCase().includes('RETURNING')) {
-    pgText = pgText + ' RETURNING id';
-  }
 
   try {
-    const res = await pool.query(pgText, params);
-    const duration = Date.now() - start;
-    logger.debug(`Executed query in ${duration}ms`);
+    // Si la query viene configurada para Postgres (con $1, $2, o RETURNING id), 
+    // intentamos limpiarla para que MySQL la acepte usando expresiones regulares simples
+    let mysqlText = text;
+    if (mysqlText && mysqlText.includes('$')) {
+        mysqlText = mysqlText.replace(/\$\d+/g, '?');
+    }
     
-    // Simular el insertId de MySQL usando el id que nos devuelve Postgres con RETURNING
+    // Quitar RETURNING id que es propio de Postgres
+    if (mysqlText && mysqlText.toUpperCase().includes('RETURNING ID')) {
+        mysqlText = mysqlText.replace(/RETURNING id/gi, '');
+    }
+
+    const [rows, fields] = await pool.execute(mysqlText, params);
+    const duration = Date.now() - start;
+    logger.debug(`Executed MySQL query in ${duration}ms`);
+    
+    // Simulamos la respuesta tipo Postgres para que los servicios no se rompan, 
+    // pero también incluimos el insertId nativo de MySQL.
     return {
-      rows: res.rows,
-      insertId: res.rows.length > 0 ? res.rows[0].id : null,
-      affectedRows: res.rowCount
+      rows: Array.isArray(rows) ? rows : [],
+      insertId: rows.insertId ? rows.insertId : null,
+      affectedRows: rows.affectedRows
     };
   } catch (err) {
     logger.error('Database query error:', err);
@@ -65,23 +76,24 @@ async function query(text, params) {
 }
 
 async function getClient() {
-  const client = await pool.connect();
+  const client = await pool.getConnection();
   const originalQuery = client.query.bind(client);
+  const originalExecute = client.execute.bind(client);
   
+  // Envolvemos query para el getClient
   client.query = async (text, params) => {
-    let pgText = text;
-    if (pgText && pgText.includes('?')) {
-      let paramIndex = 1;
-      pgText = pgText.replace(/\?/g, () => `$${paramIndex++}`);
+    let mysqlText = text;
+    if (mysqlText && mysqlText.includes('$')) {
+        mysqlText = mysqlText.replace(/\$\d+/g, '?');
     }
-    if (pgText.toUpperCase().trim().startsWith('INSERT') && !pgText.toUpperCase().includes('RETURNING')) {
-      pgText = pgText + ' RETURNING id';
+    if (mysqlText && mysqlText.toUpperCase().includes('RETURNING ID')) {
+        mysqlText = mysqlText.replace(/RETURNING id/gi, '');
     }
-    const res = await originalQuery(pgText, params);
+    const [rows] = await originalExecute(mysqlText, params);
     return {
-      rows: res.rows,
-      insertId: res.rows.length > 0 ? res.rows[0].id : null,
-      affectedRows: res.rowCount
+      rows: Array.isArray(rows) ? rows : [],
+      insertId: rows.insertId ? rows.insertId : null,
+      affectedRows: rows.affectedRows
     };
   };
   
